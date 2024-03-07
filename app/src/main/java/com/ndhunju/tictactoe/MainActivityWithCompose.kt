@@ -26,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -256,7 +257,6 @@ fun MainContentPreview() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContent(
     uiStateFlow: StateFlow<UiState> = MutableStateFlow(sampleUiState).asStateFlow(),
@@ -272,95 +272,129 @@ fun MainContent(
             .background(MaterialTheme.colorScheme.primary),
         verticalArrangement = Arrangement.Center
     ) {
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.CenterHorizontally)
-        ) {
-            Text(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(30))
-                    .background(MaterialTheme.colorScheme.onBackground)
-                    .padding(3.dp)
-                    .padding(horizontal = 3.dp),
-                text = uiState.value.playerXScore
-            )
+        val commonModifiers = Modifier.align(Alignment.CenterHorizontally)
+        ScoreBoard(commonModifiers, uiState)
+        PlayerTurnText(commonModifiers, uiState)
+        TicTacToeBoard(commonModifiers, uiState, onClickGridCell)
+        ResetButton(commonModifiers, onClickReset)
+        GameResultDialog(commonModifiers, uiState, onClickPlayAgain)
+    }
+}
 
-            Spacer(modifier = Modifier.padding(6.dp))
+@Composable
+private fun ResetButton(modifier: Modifier, onClickReset: (() -> Unit)?) {
+    Text(
+        modifier = modifier
+            .padding(12.dp)
+            .padding(top = 34.dp)
+            .clip(RoundedCornerShape(30))
+            .background(MaterialTheme.colorScheme.onBackground)
+            .padding(3.dp)
+            .padding(horizontal = 3.dp)
+            .clickable { onClickReset?.invoke() },
+        text = "Reset"
+    )
+}
 
-            Text(
+@Composable
+private fun PlayerTurnText(
+    modifier: Modifier,
+    uiState: State<UiState>
+) {
+    Text(
+        modifier = modifier
+            .padding(bottom = 12.dp),
+        text = uiState.value.playerTurnText,
+        style = MaterialTheme.typography.bodyMedium
+    )
+}
+
+@Composable
+private fun TicTacToeBoard(
+    modifier: Modifier,
+    uiState: State<UiState>,
+    onClickGridCell: ((row: Int, col: Int) -> Unit)?,
+) {
+    LazyVerticalGrid(
+        modifier = modifier
+            .wrapContentWidth()
+            .padding(horizontal = 64.dp)
+            .background(color = Purple40),
+        columns = GridCells.Fixed(3)
+    ) {
+        items(count = 9) { index ->
+            val row = index / 3
+            val col = index % 3
+            Button(
+                onClick = { onClickGridCell?.invoke(row, col) },
                 modifier = Modifier
-                    .clip(RoundedCornerShape(30))
-                    .background(MaterialTheme.colorScheme.onBackground)
-                    .padding(3.dp)
-                    .padding(horizontal = 3.dp),
-                text = uiState.value.playerOScore
-            )
+                    .padding(getPaddingFor(row, col, 3.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            ) {
+                Text(
+                    text = uiState.value.gridValues[row][col] ?: "",
+                    fontSize = 32.sp
+                )
+            }
         }
+    }
+}
 
-        Text(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 12.dp),
-            text = uiState.value.playerTurnText,
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        LazyVerticalGrid(
-            modifier = Modifier
-                .wrapContentWidth()
-                .padding(horizontal = 64.dp)
-                .background(color = Purple40),
-            columns = GridCells.Fixed(3)
-        ){
-            items(count = 9) { index ->
-                val row = index/3
-                val col = index % 3
-                Button(
-                    onClick = { onClickGridCell?.invoke(row, col) },
-                    modifier = Modifier
-                        .padding(getPaddingFor(row, col, 3.dp))
-                        .background(MaterialTheme.colorScheme.primary)
-                ) {
-                    Text(
-                        text = uiState.value.gridValues[row][col] ?: "",
-                        fontSize = 32.sp
-                    )
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun GameResultDialog(
+    modifier: Modifier,
+    uiState: State<UiState>,
+    onClickPlayAgain: (() -> Unit)?
+) {
+    AnimatedVisibility(modifier = modifier, visible = uiState.value.gameOverText.isNotEmpty()) {
+        AlertDialog(onDismissRequest = {}) {
+            Column(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.onSurface)
+                    .padding(32.dp)
+            ) {
+                Text(
+                    text = uiState.value.gameOverText,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+                Button(onClick = { onClickPlayAgain?.invoke() }) {
+                    Text(text = "Play Again")
                 }
             }
         }
+    }
+}
 
+@Composable
+private fun ScoreBoard(
+    modifier: Modifier,
+    uiState: State<UiState>
+) {
+    Row(
+        modifier = modifier
+            .padding(12.dp)
+    ) {
         Text(
             modifier = Modifier
-                .padding(12.dp)
-                .padding(top = 34.dp)
-                .align(Alignment.CenterHorizontally)
                 .clip(RoundedCornerShape(30))
                 .background(MaterialTheme.colorScheme.onBackground)
                 .padding(3.dp)
-                .padding(horizontal = 3.dp)
-                .clickable { onClickReset?.invoke() },
-            text = "Reset"
+                .padding(horizontal = 3.dp),
+            text = uiState.value.playerXScore
         )
 
-        AnimatedVisibility(visible = uiState.value.gameOverText.isNotEmpty()) {
-            AlertDialog(onDismissRequest = {}) {
-                Column(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.onSurface)
-                        .padding(32.dp)
-                ) {
-                    Text(
-                        text = uiState.value.gameOverText,
-                        style = MaterialTheme.typography.titleLarge
-                        )
-                    Spacer(modifier = Modifier.size(6.dp))
-                    Button(onClick = { onClickPlayAgain?.invoke() }) {
-                        Text(text = "Play Again")
-                    }
-                }
-            }
-        }
+        Spacer(modifier = Modifier.padding(6.dp))
+
+        Text(
+            modifier = Modifier
+                .clip(RoundedCornerShape(30))
+                .background(MaterialTheme.colorScheme.onBackground)
+                .padding(3.dp)
+                .padding(horizontal = 3.dp),
+            text = uiState.value.playerOScore
+        )
     }
 }
 
@@ -420,6 +454,7 @@ val sampleUiState = UiState(gridValues = arrayOf(
 ))
 
 /**
+ * /** Use could use following data structure to fine tune recomposition **/
  * data class UiState(
  *     val playerXScore: MutableStateFlow<String> = MutableStateFlow("X - 0"),
  *     val playerOScore: MutableStateFlow<String> = MutableStateFlow("O - 0"),
