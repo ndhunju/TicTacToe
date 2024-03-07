@@ -140,6 +140,8 @@ object GameLogic {
     fun playAgain() {
         // Reset all texts
         uiState.value = UiState()
+        updatePlayerTurnText()
+        updateScoreTexts()
     }
 
     fun reset() {
@@ -343,8 +345,15 @@ fun MainContent(
 
         AnimatedVisibility(visible = uiState.value.gameOverText.isNotEmpty()) {
             AlertDialog(onDismissRequest = {}) {
-                Column {
-                    Text(text = uiState.value.gameOverText)
+                Column(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.onSurface)
+                        .padding(32.dp)
+                ) {
+                    Text(
+                        text = uiState.value.gameOverText,
+                        style = MaterialTheme.typography.titleLarge
+                        )
                     Spacer(modifier = Modifier.size(6.dp))
                     Button(onClick = { onClickPlayAgain?.invoke() }) {
                         Text(text = "Play Again")
@@ -383,11 +392,24 @@ data class UiState(
 
         other as UiState
 
-        return gridValues.contentDeepEquals(other.gridValues)
+        // Check if each cell values are same or not
+        gridValues.forEachIndexed { r, row ->
+            row.forEachIndexed { c, cell ->
+                if(other.gridValues[r][c].equals(cell).not()) {
+                    return false
+                }
+            }
+        }
+
+        // Check each fields
+        if ((playerOScore == other.playerOScore).not()) return false
+        if ((playerXScore == other.playerXScore).not()) return false
+        if ((playerTurnText == other.playerTurnText).not()) return false
+        return !(gameOverText == other.gameOverText).not()
     }
 
     override fun hashCode(): Int {
-        return gridValues.contentDeepHashCode()
+        return gridValues.contentDeepHashCode() + playerTurnText.hashCode()
     }
 }
 
