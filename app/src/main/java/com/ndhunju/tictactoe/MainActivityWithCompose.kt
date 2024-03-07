@@ -31,6 +31,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -108,15 +111,6 @@ object GameLogic {
 
     private fun makeMove(row: Int, col: Int, forPlayer: String) {
         uiState.value.gridValues[row][col] = forPlayer
-//        textView.text = SpannableString(currentPlayer).apply {
-//            // Use white color text for O and black for x
-//            setSpan(
-//                ForegroundColorSpan(if (currentPlayer == playerO) Color.WHITE else Color.BLACK),
-//                0,
-//                currentPlayer.length,
-//                Spannable.SPAN_INCLUSIVE_EXCLUSIVE
-//            )
-//        }
     }
 
     private fun checkForWinnerOrTie() {
@@ -231,7 +225,7 @@ object GameLogic {
     }
 
     /**
-     * Returns true if all the [TextView] in [textViews] have same text
+     * Returns true if all the [cells] have same text
      */
     private fun hasSameNonEmptyValues(cells: Array<String?>): Boolean {
         val firstValue = cells.firstOrNull() ?: return false
@@ -332,7 +326,18 @@ private fun TicTacToeBoard(
                     .background(MaterialTheme.colorScheme.primary)
             ) {
                 Text(
-                    text = uiState.value.gridValues[row][col] ?: "",
+                    text = buildAnnotatedString {
+                        val text = uiState.value.gridValues[row][col] ?: ""
+                        if (text == "X") {
+                            pushStyle(SpanStyle(color = Color.Black))
+                            append("X")
+                        } else if (text == "O") {
+                            pushStyle(SpanStyle(color = Color.White))
+                            append("O")
+                        }
+
+                        toAnnotatedString()
+                    },
                     fontSize = 32.sp
                 )
             }
