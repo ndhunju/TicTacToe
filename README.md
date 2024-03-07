@@ -11,4 +11,7 @@ To see it working on your Android Studio, you could simply copy the code from
 [MainActivity.kt](app/src/main/java/com/ndhunju/tictactoe/MainActivity.kt) and
 [activity_main.xml](app/src/main/res/layout/activity_main.xml) files
 
+For Compose UI, you could simply copy the code from
+[MainActivityWithCompose.kt](app/src/main/java/com/ndhunju/tictactoe/MainActivityWithCompose.kt)
+
 <img src="graphics/game_demo.gif" width="50%" alt="app icon">
